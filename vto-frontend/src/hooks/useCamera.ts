@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 
-export function useCamera(onCapture: (base64Image: string) => void) {
+export function useCamera(onCapture?: (base64Image: string) => void) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -11,9 +11,19 @@ export function useCamera(onCapture: (base64Image: string) => void) {
       }
       return null;
     });
+    // Ensure the video element releases the stream
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
   }, []);
 
-  const startCamera = async () => {
+  // CRITICAL FIX: Wrapped in useCallback and added a guard
+  const startCamera = useCallback(async () => {
+    
+    if (videoRef.current && videoRef.current.srcObject) {
+      return;
+    }
+
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
@@ -24,12 +34,11 @@ export function useCamera(onCapture: (base64Image: string) => void) {
       }
     } catch (err) {
       console.error("Camera access denied:", err);
-      throw new Error("Camera access denied", { cause: err });
     }
-  };
+  }, []);
 
   const capturePhoto = useCallback(() => {
-    if (videoRef.current) {
+    if (videoRef.current && onCapture) {
       const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
@@ -42,10 +51,13 @@ export function useCamera(onCapture: (base64Image: string) => void) {
     }
   }, [onCapture, stopCamera]);
 
-  // Auto-cleanup
+  // Auto-cleanup when component unmounts
   useEffect(() => {
-    return () => stopCamera();
+    return () => {
+      stopCamera();
+    };
   }, [stopCamera]);
 
   return { stream, videoRef, startCamera, stopCamera, capturePhoto };
 }
+// ====================
