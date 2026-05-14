@@ -6,14 +6,14 @@ import { ARScene, type CalibrationData } from "./ARScene";
 
 const PRODUCT_ID = "3989a210-b2b8-4c70-a52c-663836c9dfeb";
 export const INITIAL_CALIBRATION: CalibrationData = {
-  scale: 2.0,
-  offsetX: 0.15,
-  offsetY: 0,
-  offsetZ: -0.85,
-  rotateX: -0.09,
-  rotateY: 0.06,
-  rotateZ: 0,
-};
+  "scale": 2.7,
+  "offsetX": 0.15,
+  "offsetY": 0,
+  "offsetZ": -0.6,
+  "rotateX": 0.21,
+  "rotateY": 0.06,
+  "rotateZ": 0
+}
 
 export function AdminVTO() {
   const { landmarker } = useFaceLandmarker("VIDEO");
@@ -66,7 +66,7 @@ export function AdminVTO() {
 
   // --- Standard MediaPipe Loop (with ESLint fix) ---
   const requestRef = useRef<number | null>(null);
-  const detectRef = useRef<() => void>(() => {});
+  const detectRef = useRef<() => void>(() => { });
 
   const detect = useCallback(() => {
     if (videoRef.current && landmarker && videoRef.current.readyState >= 2) {
@@ -97,25 +97,34 @@ export function AdminVTO() {
 
   return (
     <div className="flex w-full h-screen bg-zinc-900 text-white">
-      {/* LEFT: THE CAMERA VIEW */}
-      <div className="relative w-3/4 h-full bg-black">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ transform: "scaleX(-1)" }}
-        />
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <Canvas
-            camera={{ position: [0, 0, 5], fov: 45 }}
-            gl={{ alpha: true, antialias: true }}
-          >
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <ARScene landmarksRef={landmarksRef} calibration={tune} />
-          </Canvas>
+      {/* LEFT: THE CAMERA VIEW
+          DOM STRUCTURE MUST BE IDENTICAL to ARVTOModal:
+            → One relative container with `aspect-video`
+            → <video> absolute-inset-0 with object-cover
+            → <Canvas> absolute-inset-0 overlay
+          The webcam is forced to 1280×720 (16:9) by useCamera, matching
+          aspect-video exactly, so object-cover produces ZERO crop.
+          This makes MediaPipe's 0–1 coords map 1:1 to the visible area. */}
+      <div className="w-3/4 h-full flex items-center justify-center bg-zinc-950">
+        <div className="relative w-full max-h-full aspect-video">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ transform: "scaleX(-1)" }}
+          />
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <Canvas
+              camera={{ position: [0, 0, 5], fov: 45 }}
+              gl={{ alpha: true, antialias: true }}
+            >
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 10, 10]} />
+              <ARScene landmarksRef={landmarksRef} calibration={tune} />
+            </Canvas>
+          </div>
         </div>
       </div>
 

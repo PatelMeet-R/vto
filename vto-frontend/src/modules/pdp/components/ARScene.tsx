@@ -33,14 +33,14 @@ type ARSceneProps = {
 
 // Default fit used by the customer VTO modal when no admin calibration is passed.
 export const DEFAULT_CALIBRATION: CalibrationData = {
-  scale: 2.2,
-  offsetX: 0.8,
-  offsetY: -0.1,
-  offsetZ: 0.3,
-  rotateX: 0,
-  rotateY: 0,
-  rotateZ: 0,
-};
+  "scale": 2.7,
+  "offsetX": 0.15,
+  "offsetY": 0,
+  "offsetZ": -0.6,
+  "rotateX": 0.21,
+  "rotateY": 0.06,
+  "rotateZ": 0
+}
 
 export function ARScene({ landmarksRef, calibration }: ARSceneProps) {
   const groupRef = useRef<THREE.Group>(null);

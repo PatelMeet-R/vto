@@ -25,8 +25,18 @@ export function useCamera(onCapture?: (base64Image: string) => void) {
     }
 
     try {
+      // CRITICAL: Request 16:9 resolution (1280×720) to match the aspect-video
+      // containers used in both AdminVTO and ARVTOModal. When the webcam's
+      // native AR matches the container AR, object-fit:cover produces ZERO crop,
+      // so MediaPipe's 0–1 normalized coords map 1:1 to the visible area.
+      // Without this, the browser defaults to 4:3 (640×480), causing object-cover
+      // to crop ~12.5% off top/bottom, poisoning all Y-axis calibration.
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       });
       setStream(mediaStream);
       if (videoRef.current) {
