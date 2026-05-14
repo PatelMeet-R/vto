@@ -1,7 +1,9 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { ProductsService } from './products.service';
 
 @Controller('products')
 export class ProductsController {
+  constructor(private readonly productsService: ProductsService) {}
   @Get('demo')
   getDemoProducts() {
     // database query
@@ -97,5 +99,17 @@ export class ProductsController {
         },
       },
     ];
+  }
+  @Get(':id')
+  getProduct(@Param('id') id: string) {
+    return this.productsService.findOne(id);
+  }
+
+  @Put('admin/:id/calibrate')
+  updateCalibration(
+    @Param('id') id: string,
+    @Body('calibration') calibration: any,
+  ) {
+    return this.productsService.updateCalibration(id, calibration);
   }
 }

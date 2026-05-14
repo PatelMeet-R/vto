@@ -1,5 +1,6 @@
 import { MainLayout } from "./components/layouts/MainLayout";
 import { CatalogView } from "./modules/catalog/view/CatalogView";
+import { AdminVTO } from "./modules/pdp/components/AdminVTO";
 import { ProductDetailView } from "./modules/pdp/views/ProductDetailView";
 
 export default function App() {
@@ -7,6 +8,7 @@ export default function App() {
     <MainLayout>
       <CatalogView />
       <ProductDetailView />
+      <AdminVTO />
     </MainLayout>
   );
 }

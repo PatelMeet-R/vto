@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, type MutableRefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -16,15 +16,39 @@ import { getFaceTransform } from "../utils/matrixUtils";
 
 // ── Calibration Panel ─────────────────────────────────────────────────────
 // Tweak these values to dial in the fit for your glasses model.
-const TUNE = { scale: 2.2, offsetX: 0.8, offsetY: -0.1, offsetZ: 0.3 };
+export type CalibrationData = {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+  offsetZ: number;
+  rotateX: number;
+  rotateY: number;
+  rotateZ: number;
+};
 
-export function ARScene({
-  landmarksRef,
-}: {
-  landmarksRef: React.MutableRefObject<any>;
-}) {
+type ARSceneProps = {
+  landmarksRef: MutableRefObject<any>;
+  calibration?: CalibrationData;
+};
+
+// Default fit used by the customer VTO modal when no admin calibration is passed.
+export const DEFAULT_CALIBRATION: CalibrationData = {
+  scale: 2.2,
+  offsetX: 0.8,
+  offsetY: -0.1,
+  offsetZ: 0.3,
+  rotateX: 0,
+  rotateY: 0,
+  rotateZ: 0,
+};
+
+export function ARScene({ landmarksRef, calibration }: ARSceneProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { viewport } = useThree();
+  const tune = useMemo(
+    () => ({ ...DEFAULT_CALIBRATION, ...calibration }),
+    [calibration],
+  );
 
   // ---- Load the glasses model (drei caches this automatically) ----
   const { scene } = useGLTF("/models/glasses.glb");
@@ -63,21 +87,17 @@ export function ARScene({
       return;
     }
 
-    const { position, rotation, scale } = getFaceTransform(
-      landmarks,
-      viewport,
-    );
+    const { position, rotation, scale } = getFaceTransform(landmarks, viewport);
 
     groupRef.current.visible = true;
     groupRef.current.position.set(position[0], position[1], position[2]);
     groupRef.current.rotation.set(rotation[0], rotation[1], rotation[2], "YXZ");
-    groupRef.current.scale.setScalar(scale * TUNE.scale);
+    groupRef.current.scale.setScalar(scale * tune.scale);
   });
 
   // ---- Render ----
   return (
     <group ref={groupRef} visible={false}>
-
       {/* Invisible Head Occluder
           Renders FIRST (renderOrder 0), writes depth only (no color),
           blocking temple arms from rendering through the user's head. */}
@@ -91,10 +111,12 @@ export function ARScene({
       </mesh>
 
       {/* Glasses model with TUNE offsets for manual calibration */}
-      <group position={[TUNE.offsetX, TUNE.offsetY, TUNE.offsetZ]}>
+      <group
+        position={[tune.offsetX, tune.offsetY, tune.offsetZ]}
+        rotation={[tune.rotateX, tune.rotateY, tune.rotateZ]}
+      >
         <primitive object={normalizedModel} />
       </group>
-
     </group>
   );
 }

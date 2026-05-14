@@ -4,8 +4,7 @@ import { ModelViewer360 } from "../components/ModelViewer360";
 import { ARVTOModal } from "../components/ARVTOModal";
 
 export function ProductDetailView() {
-  const [isAROpen, setIsAROpen] = useState(false);
-
+  const [isVTOOpen, setIsVTOOpen] = useState(false);
   const product = {
     id: "gltf-demo-1",
     name: "Aero Titanium Aviator",
@@ -55,7 +54,7 @@ export function ProductDetailView() {
 
             {/* NEW: Updated button to open the AR Modal */}
             <button
-              onClick={() => setIsAROpen(true)}
+              onClick={() => setIsVTOOpen(true)}
               className="w-full py-4 bg-blue-50 text-blue-700 border-2 border-blue-200 rounded-xl font-bold text-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
             >
               ✨ True 3D Try-On
@@ -80,7 +79,11 @@ export function ProductDetailView() {
       </main>
 
       {/* NEW: The AR Modal Component */}
-      <ARVTOModal isOpen={isAROpen} onClose={() => setIsAROpen(false)} />
+      <ARVTOModal
+        isOpen={isVTOOpen}
+        onClose={() => setIsVTOOpen(false)}
+        productId="3989a210-b2b8-4c70-a52c-663836c9dfeb" // Or whatever your UUID is!
+      />
     </div>
   );
 }
