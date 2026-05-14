@@ -22,6 +22,32 @@ export function ARVTOModal({
   // 1. State to hold the calibration from the database
   const [calibration, setCalibration] =
     useState<CalibrationData>(DEFAULT_CALIBRATION);
+  const [isModalSettled, setIsModalSettled] = useState(false);
+
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     // Shadcn animations take ~150ms. We wait 300ms to be totally safe.
+  //     const timer = setTimeout(() => setIsModalSettled(true), 300);
+  //     return () => clearTimeout(timer);
+  //   } else {
+  //     setIsModalSettled(false);
+  //   }
+  // }, [isOpen]);
+
+  useEffect(() => {
+    // 1. If the modal is closed, do nothing.
+    if (!isOpen) return;
+
+    // 2. If the modal opens, start the 300ms countdown.
+    const timer = setTimeout(() => setIsModalSettled(true), 300);
+
+    // 3. CLEANUP: When the modal closes, React automatically runs this.
+    // It clears the timer and resets the state safely!
+    return () => {
+      clearTimeout(timer);
+      setIsModalSettled(false);
+    };
+  }, [isOpen]);
   const [isLoadingDB, setIsLoadingDB] = useState(true);
 
   // 2. Fetch the perfect fit from NestJS when the modal opens
@@ -103,7 +129,10 @@ export function ARVTOModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl aspect-video p-0 overflow-hidden bg-black border-none">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[95vw] sm:max-w-4xl aspect-video p-0 gap-0 overflow-hidden bg-black border-none rounded-none ring-0"
+      >
         <div className="relative w-full h-full">
           {/* Optional Loading State while DB fetches */}
           {isLoadingDB && (
@@ -122,21 +151,22 @@ export function ARVTOModal({
           />
 
           <div className="absolute inset-0 z-10 pointer-events-none">
-            <Canvas
-              camera={{ position: [0, 0, 5], fov: 45 }}
-              gl={{ alpha: true, antialias: true }}
-            >
-              <ambientLight intensity={0.5} />
-              <pointLight position={[10, 10, 10]} />
-
-              {/* 3. Pass the fetched database calibration! */}
-              {!isLoadingDB && (
+            {/* By hiding the entire Canvas until DB loads, we let the Dialog finish its CSS animation first! */}
+            {!isLoadingDB && isModalSettled && (
+              <Canvas
+                camera={{ position: [0, 0, 5], fov: 45 }}
+                gl={{ alpha: true, antialias: true }}
+                style={{ width: "100%", height: "100%" }}
+              >
+                <ambientLight intensity={0.5} />
+                <pointLight position={[10, 10, 10]} />
                 <ARScene
                   landmarksRef={landmarksRef}
                   calibration={calibration}
+                  videoRef={videoRef} // Pass the video down!
                 />
-              )}
-            </Canvas>
+              </Canvas>
+            )}
           </div>
 
           <button

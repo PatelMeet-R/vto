@@ -1,4 +1,4 @@
-import { useRef, useMemo, type MutableRefObject } from "react";
+import { useRef, useMemo, type MutableRefObject, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -16,6 +16,7 @@ import { getFaceTransform } from "../utils/matrixUtils";
 
 // ── Calibration Panel ─────────────────────────────────────────────────────
 // Tweak these values to dial in the fit for your glasses model.
+
 export type CalibrationData = {
   scale: number;
   offsetX: number;
@@ -29,20 +30,21 @@ export type CalibrationData = {
 type ARSceneProps = {
   landmarksRef: MutableRefObject<any>;
   calibration?: CalibrationData;
+  videoRef?: RefObject<HTMLVideoElement | null>;
 };
 
 // Default fit used by the customer VTO modal when no admin calibration is passed.
 export const DEFAULT_CALIBRATION: CalibrationData = {
-  "scale": 2.7,
-  "offsetX": 0.15,
-  "offsetY": 0,
-  "offsetZ": -0.6,
-  "rotateX": 0.21,
-  "rotateY": 0.06,
-  "rotateZ": 0
-}
+  scale: 2.7,
+  offsetX: 0.15,
+  offsetY: 0,
+  offsetZ: -0.6,
+  rotateX: 0.21,
+  rotateY: 0.06,
+  rotateZ: 0,
+};
 
-export function ARScene({ landmarksRef, calibration }: ARSceneProps) {
+export function ARScene({ landmarksRef, calibration, videoRef }: ARSceneProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { viewport } = useThree();
   const tune = useMemo(
@@ -86,8 +88,13 @@ export function ARScene({ landmarksRef, calibration }: ARSceneProps) {
       groupRef.current.visible = false;
       return;
     }
+    const { position, rotation, scale } = getFaceTransform(
+      landmarks,
+      viewport,
+      videoRef?.current,
+    );
 
-    const { position, rotation, scale } = getFaceTransform(landmarks, viewport);
+    // const { position, rotation, scale } = getFaceTransform(landmarks, viewport);
 
     groupRef.current.visible = true;
     groupRef.current.position.set(position[0], position[1], position[2]);
